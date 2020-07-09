@@ -33,14 +33,27 @@ io.on("connection", (socket) => {
         socket.join(user.room);
         
         // Emit admin messages for current user and all users of the room
-        socket.emit('adminMessage', {user: 'Admin', text: `${user.name}, Welcome to room - ${user.room} -`});
-        socket.broadcast.to(user.room).emit('adminMessage', {user: 'Admin', text: `${user.name}, has joined !`});
+        socket.emit('message', {user: 'Admin', text: `${user.name}, Welcome to room - ${user.room} -`});
+        socket.broadcast.to(user.room).emit('message', {user: 'Admin', text: `${user.name}, has joined !`});
 
         // call the callback here as a dummy call and it won't be used
         // at client side as there is no error
         //callback();
     });
 
+    // Handle on recieving user message and then re-broadcasting it to
+    // all users in the same room.
+
+    socket.on('userMessage', (message, callback) => {
+        const user = getUser(socket.id);
+        io.to(user.room).emit('message', {user: user.name, text: message});
+
+        // call the callback here as a dummy call and it won't be used
+        // at client side as there is no error
+        //callback();
+    });
+
+    // Handle socket disconnection
     socket.on("disconnect", () => {
         console.log("Server:: user left connction -- *disconnect*");
     });
